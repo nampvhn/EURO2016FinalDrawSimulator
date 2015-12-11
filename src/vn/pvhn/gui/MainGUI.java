@@ -5,50 +5,60 @@
  */
 package vn.pvhn.gui;
 
-import java.util.Collections;
 import java.util.Vector;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import vn.pvhn.draw.Main;
+import vn.pvhn.main.Draw;
 
 /**
  *
  * @author Edison
  */
 public class MainGUI extends javax.swing.JFrame {
-    Main m = new Main();
-    
-    String[][] str;
-    
+
+    Draw draw = new Draw();
+
+    String[][] teamList;
+
     Vector<String> pot0;
     Vector<String> pot1;
     Vector<String> pot2;
     Vector<String> pot3;
-    
+
     DefaultTableModel tblModel;
     String[] header = {"Group A", "Group B", "Group C", "Group D", "Group E", "Group F"};
+
     /**
      * Creates new form MainGUI
      */
     public MainGUI() {
         initComponents();
         this.setTitle("EURO 2016 DRAW SIMULATOR");
-        
-        str = m.getTeamList();
 
-        pot0 = m.getTeamListByPot(str, 0);
-        pot1 = m.getTeamListByPot(str, 1);
-        pot2 = m.getTeamListByPot(str, 2);
-        pot3 = m.getTeamListByPot(str, 3);
+        try {
+            // Get all 24 teams
+            teamList = draw.getTeamList();
 
-        addItemToJList(lstPot0, pot0);
-        addItemToJList(lstPot1, pot1);
-        addItemToJList(lstPot2, pot2);
-        addItemToJList(lstPot3, pot3);
-        
-        tblModel = (DefaultTableModel) tblPot.getModel();
-        tblModel.setDataVector(null, header);
+            // Divide into 4 pots
+            pot0 = draw.getTeamListByPot(teamList, 0);
+            pot1 = draw.getTeamListByPot(teamList, 1);
+            pot2 = draw.getTeamListByPot(teamList, 2);
+            pot3 = draw.getTeamListByPot(teamList, 3);
+
+            addItemToJList(lstPot0, pot0);
+            addItemToJList(lstPot1, pot1);
+            addItemToJList(lstPot2, pot2);
+            addItemToJList(lstPot3, pot3);
+
+            tblModel = (DefaultTableModel) tblPot.getModel();
+            tblModel.setDataVector(null, header);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.OK_OPTION);
+            e.printStackTrace();
+            return;
+        }
     }
 
     /**
@@ -193,84 +203,96 @@ public class MainGUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSimulateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSimulateActionPerformed
-        Vector<String> tmpPot0 = new Vector<>();
-        for (int i = 1; i < pot0.size(); i++) {
-            tmpPot0.add(pot0.get(i));
+        try {
+            // Not include France
+            Vector<String> tmpPot0 = new Vector<>();
+            for (int i = 1; i < pot0.size(); i++) {
+                tmpPot0.add(pot0.get(i));
+            }
+
+            draw.shuffleTeam(tmpPot0);
+            pot0.clear();
+            pot0.add(teamList[0][0]); // Add France
+            pot0.addAll(tmpPot0);
+
+            draw.shuffleTeam(pot1);
+            draw.shuffleTeam(pot2);
+            draw.shuffleTeam(pot3);
+
+            // Array teamList with new values
+            for (int j = 0; j < 6; j++) {
+                teamList[0][j] = pot0.get(j);
+                teamList[1][j] = pot1.get(j);
+                teamList[2][j] = pot2.get(j);
+                teamList[3][j] = pot3.get(j);
+            }
+
+            // Reorder every groups
+            Vector<String> tmp0 = new Vector<>();
+            Vector<String> tmp1 = new Vector<>();
+            Vector<String> tmp2 = new Vector<>();
+            Vector<String> tmp3 = new Vector<>();
+            Vector<String> tmp4 = new Vector<>();
+            Vector<String> tmp5 = new Vector<>();
+
+            // Add teams to each group, not include "Seed"
+            for (int i = 1; i < 4; i++) {
+                tmp0.add(teamList[i][0]);
+                tmp1.add(teamList[i][1]);
+                tmp2.add(teamList[i][2]);
+                tmp3.add(teamList[i][3]);
+                tmp4.add(teamList[i][4]);
+                tmp5.add(teamList[i][5]);
+            }
+
+            draw.shuffleTeam(tmp0);
+            draw.shuffleTeam(tmp1);
+            draw.shuffleTeam(tmp2);
+            draw.shuffleTeam(tmp3);
+            draw.shuffleTeam(tmp4);
+            draw.shuffleTeam(tmp5);
+
+            // 6 groups
+            Vector<String> group0 = new Vector<>();
+            Vector<String> group1 = new Vector<>();
+            Vector<String> group2 = new Vector<>();
+            Vector<String> group3 = new Vector<>();
+            Vector<String> group4 = new Vector<>();
+            Vector<String> group5 = new Vector<>();
+
+            // Add "Seed" to each group
+            group0.add(teamList[0][0]);
+            group1.add(teamList[0][1]);
+            group2.add(teamList[0][2]);
+            group3.add(teamList[0][3]);
+            group4.add(teamList[0][4]);
+            group5.add(teamList[0][5]);
+
+            // Add 3 others to each group
+            group0.addAll(tmp0);
+            group1.addAll(tmp1);
+            group2.addAll(tmp2);
+            group3.addAll(tmp3);
+            group4.addAll(tmp4);
+            group5.addAll(tmp5);
+
+            // Array teamList with new values
+            for (int i = 0; i < 4; i++) {
+                teamList[i][0] = group0.get(i);
+                teamList[i][1] = group1.get(i);
+                teamList[i][2] = group2.get(i);
+                teamList[i][3] = group3.get(i);
+                teamList[i][4] = group4.get(i);
+                teamList[i][5] = group5.get(i);
+            }
+
+            // Table
+            tblModel.setDataVector(teamList, header);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.OK_OPTION);
+            e.printStackTrace();
+            return;
         }
-        m.shuffleTeam(tmpPot0);
-        pot0.clear();
-        pot0.add(str[0][0]); // Thêm France
-        pot0.addAll(tmpPot0);
-        m.shuffleTeam(pot1);
-        m.shuffleTeam(pot2);
-        m.shuffleTeam(pot3);
-        
-        // Gán lại giá trị cho mảng
-        for (int j = 0; j < 6; j++) {
-            str[0][j] = pot0.get(j);
-            str[1][j] = pot1.get(j);
-            str[2][j] = pot2.get(j);
-            str[3][j] = pot3.get(j);
-        }
-        
-        // Sắp xếp thứ tự trong bảng
-        Vector<String> tmp0 = new Vector<>();
-        Vector<String> tmp1 = new Vector<>();
-        Vector<String> tmp2 = new Vector<>();
-        Vector<String> tmp3 = new Vector<>();
-        Vector<String> tmp4 = new Vector<>();
-        Vector<String> tmp5 = new Vector<>();
-        
-        for (int i = 1; i < 4; i++) {
-            tmp0.add(str[i][0]);
-            tmp1.add(str[i][1]);
-            tmp2.add(str[i][2]);
-            tmp3.add(str[i][3]);
-            tmp4.add(str[i][4]);
-            tmp5.add(str[i][5]);
-        }
-        
-        m.shuffleTeam(tmp0);
-        m.shuffleTeam(tmp1);
-        m.shuffleTeam(tmp2);
-        m.shuffleTeam(tmp3);
-        m.shuffleTeam(tmp4);
-        m.shuffleTeam(tmp5);
-        
-        // 6 groups
-        Vector<String> group0 = new Vector<>();
-        Vector<String> group1 = new Vector<>();
-        Vector<String> group2 = new Vector<>();
-        Vector<String> group3 = new Vector<>();
-        Vector<String> group4 = new Vector<>();
-        Vector<String> group5 = new Vector<>();
-        
-        group0.add(str[0][0]);
-        group1.add(str[0][1]);
-        group2.add(str[0][2]);
-        group3.add(str[0][3]);
-        group4.add(str[0][4]);
-        group5.add(str[0][5]);
-        
-        group0.addAll(tmp0);
-        group1.addAll(tmp1);
-        group2.addAll(tmp2);
-        group3.addAll(tmp3);
-        group4.addAll(tmp4);
-        group5.addAll(tmp5);
-        
-        // Lại gán lại giá trị cho mảng
-        for (int i = 0; i < 4; i++) {
-            str[i][0] = group0.get(i);
-            str[i][1] = group1.get(i);
-            str[i][2] = group2.get(i);
-            str[i][3] = group3.get(i);
-            str[i][4] = group4.get(i);
-            str[i][5] = group5.get(i);
-        }
-        
-        // Table
-        tblModel.setDataVector(str, header);
     }//GEN-LAST:event_btnSimulateActionPerformed
 
     private void btnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
@@ -302,6 +324,9 @@ public class MainGUI extends javax.swing.JFrame {
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(MainGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
